@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UsePipes,
@@ -11,34 +10,33 @@ import {
   HttpStatus,
   HttpException,
 } from '@nestjs/common';
-import { QuizService } from '../services/quiz.service';
-import { CreateQuizDto } from '../dto/create-quiz.dto';
-import { UpdateQuizDto } from '../dto/update-quiz.dto';
 import { SETTINGS } from '../../../app.utils';
 import { RolesGuard } from '../../auth/roles.guard';
 import { Roles } from '../../auth/roles.decorators';
 import { ResponseInterface, response } from '../../../common/response';
 import { JwtAuthGuard } from '../../../modules/auth/jwt.auth.guard';
+import { OptionService } from '../services/option.service';
+import { CreateOptionDto } from '../dto/create-option.dto';
 
 @Controller('option')
-// @UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard)
 export class OptionController {
-  constructor(private readonly quizService: QuizService) {}
+  constructor(private readonly optionService: OptionService) {}
 
   @Post()
-  // @UsePipes(SETTINGS.VALIDATION_PIPE)
-  // @UseGuards(RolesGuard)
-  // @Roles('admin')
+  @UsePipes(SETTINGS.VALIDATION_PIPE)
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   async create(
-    @Body() createQuizDto: CreateQuizDto,
+    @Body() createOptionDto: CreateOptionDto,
   ): Promise<ResponseInterface> {
     try {
-      const createdQuiz = await this.quizService.create(createQuizDto);
+      const createdOption = await this.optionService.create(createOptionDto);
 
       return response(
         HttpStatus.CREATED,
-        'Quiz created successfully.',
-        createdQuiz,
+        'Option created successfully.',
+        createdOption,
       );
     } catch (error) {
       throw new HttpException(
@@ -46,7 +44,7 @@ export class OptionController {
           status: error?.response?.status ?? HttpStatus.FORBIDDEN,
           error:
             error?.response?.error ??
-            'Something went wrong, while creating quiz',
+            'Something went wrong, while creating option.',
         },
         error?.response?.status ?? HttpStatus.FORBIDDEN,
         {
@@ -59,15 +57,15 @@ export class OptionController {
   @Get()
   async findAll(): Promise<ResponseInterface> {
     try {
-      const quizzes = await this.quizService.findAll();
-      return response(HttpStatus.OK, 'Get quiz list successfully.', quizzes);
+      const options = await this.optionService.findAll();
+      return response(HttpStatus.OK, 'Get option list successfully.', options);
     } catch (error) {
       throw new HttpException(
         {
           status: error?.response?.status ?? HttpStatus.FORBIDDEN,
           error:
             error?.response?.error ??
-            'Something went wrong, while getting quiz list.',
+            'Something went wrong, while getting option list.',
         },
         error?.response?.status ?? HttpStatus.FORBIDDEN,
         {
@@ -80,15 +78,15 @@ export class OptionController {
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<ResponseInterface> {
     try {
-      const quiz = await this.quizService.findOne(id);
-      return response(HttpStatus.OK, 'Get quiz by ID successfully.', quiz);
+      const option = await this.optionService.findOne(id);
+      return response(HttpStatus.OK, 'Get option by ID successfully.', option);
     } catch (error) {
       throw new HttpException(
         {
           status: error?.response?.status ?? HttpStatus.FORBIDDEN,
           error:
             error?.response?.error ??
-            'Something went wrong, while getting quiz by ID.',
+            'Something went wrong, while getting option by ID.',
         },
         error?.response?.status ?? HttpStatus.FORBIDDEN,
         {
@@ -98,33 +96,28 @@ export class OptionController {
     }
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateQuizDto: UpdateQuizDto) {
-    return this.quizService.update(+id, updateQuizDto);
-  }
-
   @Delete(':id')
   async remove(@Param('id') id: string) {
     try {
-      const quiz = await this.quizService.remove(id);
-      if (!quiz) {
+      const option = await this.optionService.remove(id);
+      if (!option) {
         throw new HttpException(
           {
             status: HttpStatus.FORBIDDEN,
-            error: 'Something went wrong, while deleting quiz.',
+            error: 'Something went wrong, while deleting option.',
           },
           HttpStatus.FORBIDDEN,
         );
       }
 
-      return response(HttpStatus.OK, 'Delete quiz successfully.');
+      return response(HttpStatus.OK, 'Delete option successfully.');
     } catch (error) {
       throw new HttpException(
         {
           status: error?.response?.status ?? HttpStatus.FORBIDDEN,
           error:
             error?.response?.error ??
-            'Something went wrong, while deleting quiz.',
+            'Something went wrong, while deleting option.',
         },
         error?.response?.status ?? HttpStatus.FORBIDDEN,
         {

@@ -2,30 +2,49 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
-import { CreateQuizDto } from '../dto/create-quiz.dto';
-import { UpdateQuizDto } from '../dto/update-quiz.dto';
-
-import { QuizDoc } from '../interfaces/quiz-document.interface';
-import { Quiz } from '../interfaces/quiz.interface';
+import { QuestionDoc } from '../interfaces/question-document.interface';
 import { removeFields, toJSON } from '../../../common/utils';
+import { OptionDoc } from '../interfaces/option-document.interface';
+import { CreateOptionDto } from '../dto/create-option.dto';
+import { Option } from '../interfaces/option.interface';
 
 @Injectable()
 export class OptionService {
   constructor(
-    @InjectModel('Quiz') private readonly quizModel: Model<QuizDoc>,
+    @InjectModel('Option') private readonly optionModel: Model<OptionDoc>,
+    @InjectModel('Question') private readonly questionModel: Model<QuestionDoc>,
   ) {}
 
-  async create(createQuizDto: CreateQuizDto): Promise<Quiz> {
+  async create(createOptionDto: CreateOptionDto): Promise<Option> {
     try {
-      const createdQuiz = await this.quizModel.create(createQuizDto as any);
-      return removeFields(toJSON(createdQuiz));
+      // const { question } = createOptionDto;
+
+      // const checkQuestion = await this.questionModel.findOne({
+      //   _id: question,
+      //   isDeleted: { $ne: true },
+      // });
+      // if (!checkQuestion) {
+      //   throw new HttpException(
+      //     {
+      //       status: HttpStatus.NOT_FOUND,
+      //       error:
+      //         'Mention question is not available. Please check and try again',
+      //     },
+      //     HttpStatus.NOT_FOUND,
+      //   );
+      // }
+
+      const createdOption = await this.optionModel.create(
+        createOptionDto as any,
+      );
+      return removeFields(toJSON(createdOption));
     } catch (error) {
       throw new HttpException(
         {
           status: error?.response?.status ?? HttpStatus.FORBIDDEN,
           error:
             error?.response?.error ??
-            'Something went wrong, while creating quiz.',
+            'Something went wrong, while creating option.',
         },
         error?.response?.status ?? HttpStatus.FORBIDDEN,
         {
@@ -35,30 +54,31 @@ export class OptionService {
     }
   }
 
-  async findAll(): Promise<Quiz[]> {
+  async findAll(): Promise<Option[]> {
     try {
-      const quizzes = await this.quizModel
+      const options = await this.optionModel
         .find({ isDeleted: { $ne: true } })
+        .populate({ path: 'question', select: 'question' })
         .exec();
 
-      if (!quizzes.length) {
+      if (!options.length) {
         throw new HttpException(
           {
             status: HttpStatus.NOT_FOUND,
-            error: 'No quizzes found.',
+            error: 'No options found.',
           },
           HttpStatus.NOT_FOUND,
         );
       }
 
-      return await removeFields(toJSON(quizzes));
+      return await removeFields(toJSON(options));
     } catch (error) {
       throw new HttpException(
         {
           status: error?.response?.status ?? HttpStatus.FORBIDDEN,
           error:
             error?.response?.error ??
-            'Something went wrong, while getting quiz list.',
+            'Something went wrong, while getting option list.',
         },
         error?.response?.status ?? HttpStatus.FORBIDDEN,
         {
@@ -68,29 +88,30 @@ export class OptionService {
     }
   }
 
-  async findOne(_id: string): Promise<Quiz> {
+  async findOne(_id: string): Promise<Option> {
     try {
-      const quiz = await this.quizModel
+      const option = await this.optionModel
         .findOne({ _id, isDeleted: { $ne: true } })
+        .populate({ path: 'question', select: 'question' })
         .exec();
 
-      if (!quiz) {
+      if (!option) {
         throw new HttpException(
           {
             status: HttpStatus.NOT_FOUND,
-            error: 'No quiz found by ID.',
+            error: 'No option found by ID.',
           },
           HttpStatus.NOT_FOUND,
         );
       }
-      return await removeFields(toJSON(quiz));
+      return await removeFields(toJSON(option));
     } catch (error) {
       throw new HttpException(
         {
           status: error?.response?.status ?? HttpStatus.FORBIDDEN,
           error:
             error?.response?.error ??
-            'Something went wrong, while getting quiz by ID.',
+            'Something went wrong, while getting option by ID.',
         },
         error?.response?.status ?? HttpStatus.FORBIDDEN,
         {
@@ -99,14 +120,9 @@ export class OptionService {
       );
     }
   }
-
-  update(id: number, updateQuizDto: UpdateQuizDto) {
-    return `This action updates a #${id} quiz`;
-  }
-
   async remove(_id: string): Promise<boolean> {
     try {
-      const quiz = await this.quizModel
+      const option = await this.optionModel
         .findOneAndUpdate(
           {
             _id,
@@ -117,11 +133,11 @@ export class OptionService {
         )
         .exec();
 
-      if (!quiz) {
+      if (!option) {
         throw new HttpException(
           {
             status: HttpStatus.NOT_FOUND,
-            error: 'No quiz found for given ID.',
+            error: 'No option found for given ID.',
           },
           HttpStatus.NOT_FOUND,
         );
@@ -134,7 +150,7 @@ export class OptionService {
           status: error?.response?.status ?? HttpStatus.FORBIDDEN,
           error:
             error?.response?.error ??
-            'Something went wrong, while getting quiz by ID.',
+            'Something went wrong, while getting option by ID.',
         },
         error?.response?.status ?? HttpStatus.FORBIDDEN,
         {

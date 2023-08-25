@@ -21,14 +21,14 @@ import { ResponseInterface, response } from '../../../common/response';
 import { JwtAuthGuard } from '../../../modules/auth/jwt.auth.guard';
 
 @Controller('quiz')
-// @UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard)
 export class QuizController {
   constructor(private readonly quizService: QuizService) {}
 
   @Post()
-  // @UsePipes(SETTINGS.VALIDATION_PIPE)
-  // @UseGuards(RolesGuard)
-  // @Roles('admin')
+  @UsePipes(SETTINGS.VALIDATION_PIPE)
+  @UseGuards(RolesGuard)
+  @Roles('admin')
   async create(
     @Body() createQuizDto: CreateQuizDto,
   ): Promise<ResponseInterface> {
